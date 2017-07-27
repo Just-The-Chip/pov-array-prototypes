@@ -66,6 +66,7 @@ unsigned long startTime = 0;
 
 unsigned long sensorTime = 0;
 boolean pendingHigh = false;
+int magnetsPassed = 0;
 
 void setup() {
 
@@ -94,12 +95,22 @@ void loop() {
 
 void updateMPR() {
   //Serial.println(digitalRead(SENSORPIN));
+
   if(!digitalRead(SENSORPIN)) {
     pendingHigh = true;
     
   } else if(pendingHigh) {
     unsigned long now = micros();
     
+    //estimate start time based on how much time it would have took 
+    //to travel to the point that it's at now.
+    startTime = now - ((now - sensorTime) * magnetsPassed); 
+
+    //we have reached the "bottom" (i.e. last magnet encountered)
+    if(++magnetsPassed == NUMMAGNETS) {
+      magnetsPassed = 0;
+    }
+
     microPerRotation = (now - sensorTime) * NUMMAGNETS;
     loopInterval = microPerRotation / 360;
 
@@ -114,12 +125,13 @@ int currentInterval() {
   unsigned long now = micros();
   long timeDiff = now - startTime;
 
-  if(timeDiff >= microPerRotation) {
+  int interval = (int) (timeDiff / loopInterval);
+  if(interval >= 360) {
     startTime = now;
-    timeDiff = 0;
+    interval = 0;
   }
 
-  return (int) (timeDiff / loopInterval);
+  return interval;
 }
 
 void setStrip(int stripNum, int curInterval) {
