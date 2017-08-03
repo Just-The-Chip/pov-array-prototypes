@@ -3,7 +3,7 @@
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 #include <avr/pgmspace.h>
 
-#include "Count.h"
+#include "count-less.h"
 
 //LED strips
 #define NUMPIXELS 60 // Number of LEDs in strip
@@ -43,9 +43,10 @@ void setup() {
 
 void loop() {
 
-  updateMPR();
+  unsigned long now = micros();
+  updateMPR(now);
   
-  int curInterval = currentInterval();
+  int curInterval = currentInterval(now);
   //Serial.println(curInterval);
 
   for(int i = 0; i < NUMSTRIPS; i++) {
@@ -55,14 +56,13 @@ void loop() {
   strip.show();
 }
 
-void updateMPR() {
+void updateMPR(unsigned long now) {
   //Serial.println(digitalRead(SENSORPIN));
 
   if(!digitalRead(SENSORPIN)) {
     pendingHigh = true;
     
   } else if(pendingHigh) {
-    unsigned long now = micros();
     long timeDiff = now - sensorTime;
     
     //estimate start time based on how much time it would have took 
@@ -88,8 +88,7 @@ void updateMPR() {
 }
 
 //TODO: deal with rollover
-int currentInterval() {
-  unsigned long now = micros();
+int currentInterval(unsigned long now) {
   long timeDiff = now - startTime;
 
   int interval = (int) (timeDiff / loopInterval);
