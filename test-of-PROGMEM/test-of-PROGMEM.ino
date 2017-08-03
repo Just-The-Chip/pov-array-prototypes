@@ -3,7 +3,7 @@
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 #include <avr/pgmspace.h>
 
-#include "image.h"
+#include "rainbow-test.h"
 
 //LED strips
 #define NUMPIXELS 60 // Number of LEDs in strip
