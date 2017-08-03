@@ -18,9 +18,9 @@
 #define IMAGEWIDTH 360
 #define IMAGEHEIGHT 8
 
-uint32_t colors[3] = {
-  0x6600ff, //purple
-  0xffff00  //yellow
+uint32_t colors[2] = {
+  0x000000, //black
+  0x440000  //red
 };
 
 const PROGMEM uint8_t image[IMAGEWIDTH][IMAGEHEIGHT] = {

@@ -3,7 +3,7 @@
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 #include <avr/pgmspace.h>
 
-#include "rainbow-test.h"
+#include "Count.h"
 
 //LED strips
 #define NUMPIXELS 60 // Number of LEDs in strip
@@ -63,17 +63,22 @@ void updateMPR() {
     
   } else if(pendingHigh) {
     unsigned long now = micros();
+    long timeDiff = now - sensorTime;
     
     //estimate start time based on how much time it would have took 
     //to travel to the point that it's at now.
-    startTime = now - ((now - sensorTime) * magnetsPassed); 
+    
+    //startTime = now - (timeDiff * magnetsPassed); 
+    if(magnetsPassed == 0) {
+      startTime = now;
+    }
 
     //we have reached the "bottom" (i.e. last magnet encountered)
     if(++magnetsPassed == NUMMAGNETS) {
       magnetsPassed = 0;
     }
 
-    microPerRotation = (now - sensorTime) * NUMMAGNETS;
+    microPerRotation = timeDiff * NUMMAGNETS;
     loopInterval = microPerRotation / 360;
 
     sensorTime = now;
