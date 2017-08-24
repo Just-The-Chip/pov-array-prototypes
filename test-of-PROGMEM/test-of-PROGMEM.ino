@@ -1,16 +1,16 @@
-#include <Adafruit_DotStar.h>
+ #include <Adafruit_DotStar.h>
 // Because conditional #includes don't work w/Arduino sketches...
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 #include <avr/pgmspace.h>
 
-#include "count-less.h"
+#include "rainbow-test.h"
 
 //LED strips
 #define NUMPIXELS 60 // Number of LEDs in strip
 #define NUMSTRIPS 2 //Total Number of strips
 
 //hall effect sensor
-#define SENSORPIN 10
+//#define SENSORPIN 10
 #define NUMMAGNETS 1
 
 Adafruit_DotStar strip = Adafruit_DotStar(NUMPIXELS, DOTSTAR_BGR);
@@ -29,6 +29,7 @@ unsigned long startTime = 0;
 unsigned long sensorTime = 0;
 boolean pendingHigh = false;
 int magnetsPassed = 0;
+int prevInterval = 0;
 
 void setup() {
 
@@ -59,7 +60,8 @@ void loop() {
 void updateMPR(unsigned long now) {
   //Serial.println(digitalRead(SENSORPIN));
 
-  if(!digitalRead(SENSORPIN)) {
+
+  if(PINB & B00000100) {
     pendingHigh = true;
     
   } else if(pendingHigh) {
@@ -101,30 +103,35 @@ int currentInterval(unsigned long now) {
 }
 
 void setStrip(int stripNum, int curInterval) {
-  int pixelOffset = pixelsPerStrip * stripNum;
-  int stripInterval = curInterval + (stripNum * stripOffset); //interval relative to what strip we are using
-
-  if(stripInterval >= 360) {
-    stripInterval -= 360;
-  }
-
-  stripInterval /= RESOLUTION;
-
-  if(stripInterval < IMAGEWIDTH && stripInterval >= 0) {
-
-    for(int i = 0; i < IMAGEHEIGHT; i++) {
-
-      uint8_t pixelVal = pgm_read_byte(&(image[stripInterval][i]));
-
-      uint32_t pixelColor = colors[pixelVal];
-      //uint32_t pixelColor = pgm_read_byte_far(&(colors[pixelVal]));
+  if(curInterval != prevInterval) {
+    int pixelOffset = pixelsPerStrip * stripNum;
+    int stripInterval = curInterval + (stripNum * stripOffset); //interval relative to what strip we are using
+  
+    if(stripInterval >= 360) {
+      stripInterval -= 360;
+    }
+  
+    stripInterval /= RESOLUTION;
+  
+    if(stripInterval < IMAGEWIDTH && stripInterval >= 0) {
+  
+      for(int i = 0; i < IMAGEHEIGHT; i++) {
+  
+        uint8_t pixelVal = pgm_read_byte(&(image[stripInterval][i]));
+  
+        uint32_t pixelColor = colors[pixelVal];
+        //uint32_t pixelColor = pgm_read_byte_far(&(colors[pixelVal]));
+        
+        strip.setPixelColor(i + pixelOffset + OFFSET, pixelColor);
+      }
       
-      strip.setPixelColor(i + pixelOffset + OFFSET, pixelColor);
+    } else {
+      for(int i = 0; i < IMAGEHEIGHT; i++) {    
+        strip.setPixelColor(i + pixelOffset + OFFSET, 0);
+      }
     }
-    
-  } else {
-    for(int i = 0; i < IMAGEHEIGHT; i++) {    
-      strip.setPixelColor(i + pixelOffset + OFFSET, 0);
-    }
+
+    prevInterval = curInterval;
   }
+  
 }
